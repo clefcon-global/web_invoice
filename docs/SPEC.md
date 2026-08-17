@@ -20,7 +20,10 @@ truth. Read all of it before writing code.
    opening the PDF. "It builds" requires running the build.
 4. **Section 9 (Security) is not optional.** Violating it exposes a real business's
    customer data and bank details. Read it twice.
-5. If a required value is genuinely missing from this document, ask rather than
+5. **`src/pdf/**` is sealed — never modify it.** It is authored and visually
+   verified by the project owner, and protected by golden-file tests. Import it
+   and call it. See **section 7A**, which overrides any instinct to "improve" it.
+6. If a required value is genuinely missing from this document, ask rather than
    invent one. Do not guess file paths, API signatures or package versions.
 
 **Reference files** (git-ignored, present locally, see section 9.3):
@@ -318,6 +321,77 @@ Both are open-licensed, so committing them is fine. **Never commit The Seasons.*
 
 ---
 
+## 7A. Module ownership — READ BEFORE TOUCHING `src/pdf/`
+
+### 7A.1 The PDF module is sealed
+
+`src/pdf/**` is **owned and frozen**. It was authored and visually verified against
+the reference document by the project owner. **Do not modify any file in it.**
+
+This is not a style preference. The PDF is the product — it goes to paying
+customers, it represents the business, and a layout regression is both invisible in
+code review and embarrassing in the customer's inbox. Everything else in this
+repository is replaceable; this module is not.
+
+**Permitted:** import it and call it.
+**Forbidden without explicit instruction from the owner:** editing the layout,
+changing fonts or sizes, adjusting positions, "tidying" the code, reformatting it,
+upgrading or swapping the PDF library, or regenerating the golden files.
+
+### 7A.2 The only public entry point
+
+```
+src/pdf/
+├── index.ts        ← the ONLY file the rest of the app may import
+├── contract.ts     ← frozen input types
+├── template.ts     ← layout. Do not edit.
+├── fonts.ts        ← font registration. Do not edit.
+├── logo.ts         ← the swappable logo module (section 4.4)
+└── __golden__/     ← reference PDFs + fixtures. Do not regenerate.
+```
+
+The application calls exactly one function: data in, PDF blob out. It must never
+import `template.ts`, `fonts.ts` or anything else inside `src/pdf/` directly, and
+must never construct document definitions of its own.
+
+Any layout knowledge that leaks outside this folder is a bug.
+
+### 7A.3 The input contract is frozen
+
+`contract.ts` defines precisely what the module accepts. To pass new information to
+the document you must **extend the contract deliberately** — never work around it
+by editing the layout. If the contract cannot express what you need, stop and ask
+the owner. Do not improvise.
+
+The contract takes money as **integer cents** (section 8.4). It does not accept
+pre-formatted strings; all currency and date formatting happens inside the module,
+so that every document formats identically.
+
+### 7A.4 Golden-file tests are the enforcement
+
+`src/pdf/__golden__/` holds fixed sample inputs and the reference PDFs they must
+produce. The test suite regenerates and compares extracted text and character
+positions against those references.
+
+**If you change the layout, these tests fail and name what moved.** That is their
+entire purpose.
+
+A failing golden test means **you broke the document** — fix your change. It does
+**not** mean the golden files are stale. Never "fix" a failing golden test by
+regenerating the reference files. Only the owner regenerates goldens, deliberately,
+after visually re-verifying against the reference document.
+
+### 7A.5 What you should build instead
+
+Everything outside `src/pdf/`: the form and its validation, line-item add/remove,
+live totals, customer and product management, local caching and offline behaviour,
+export/import, the Worker API, D1 schema, authentication, and deployment.
+
+That is the large majority of the work, and none of it requires opening the PDF
+module.
+
+---
+
 ## 8. Data model and API
 
 ### 8.1 Owner profile
@@ -448,6 +522,12 @@ URLs. Ensure the access policy covers them, or they become an unprotected back d
 ## 10. Build phases
 
 Each phase ends in something independently checkable. Do not skip ahead.
+
+**Who does what.** Phases 1 and 2 produce the sealed PDF module (section 7A) and
+are done by the project owner. Phases 3–5 are the application around it and are
+the work handed to other models or sessions. If you are picking this up cold,
+**your work starts at Phase 3**, and `src/pdf/` already exists and already works —
+call it, do not rebuild it.
 
 ### Phase 1 — Font comparison
 Render the reference invoice's text in **Cormorant Garamond**, **Prata** and
