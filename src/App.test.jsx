@@ -17,6 +17,10 @@ afterEach(() => cleanup());
 beforeEach(() => {
   localStorage.clear(); vi.clearAllMocks();
   localStorage.setItem('sheer-aura-invoicing:v1:owner', JSON.stringify({ businessName: 'Test Traders', addressLines: ['Test Lane'], paymentLines: ['Test payment'] }));
+  localStorage.setItem('sheer-aura-invoicing:v1:token', 'test-token');
+  localStorage.setItem('sheer-aura-invoicing:v1:tokenExpiresAt', String(Date.now() + 60000));
+  const owner = { businessName: 'Test Traders', addressLines: ['Test Lane'], paymentLines: ['Test payment'] };
+  vi.stubGlobal('fetch', vi.fn(async (url) => new Response(JSON.stringify(url.endsWith('/issue') ? { number: 1 } : { owner, customers: [], products: [], counters: { invoice: 0, receipt: 0 } }), { status: 200 })));
 });
 
 test('assembles invoice cents and shows the required live total calculation', async () => {

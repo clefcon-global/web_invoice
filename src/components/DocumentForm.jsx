@@ -8,7 +8,8 @@ import {
 import { loadDocumentAssets } from '../lib/pdfAssets.js';
 import { computeTotals, formatAmount, formatPrice, parseCents } from '../lib/money.js';
 import { downloadBlob } from '../lib/download.js';
-import { appendDocument, nextDocumentNumber } from '../lib/storage.js';
+import { appendDocument } from '../lib/storage.js';
+import { issueNumber as syncIssueNumber } from '../lib/sync.js';
 import { makeItem, today } from '../lib/formHelpers.js';
 
 export default function DocumentForm({ owner, customers, products, onIssued }) {
@@ -76,7 +77,8 @@ export default function DocumentForm({ owner, customers, products, onIssued }) {
       };
       validateDocumentInput(draft);
 
-      const input = { ...draft, number: nextDocumentNumber(kind) };
+      const number = await syncIssueNumber(kind);
+      const input = { ...draft, number };
       const blob = await renderDocumentBlob(input, await loadDocumentAssets());
 
       downloadBlob(blob, suggestedFilename(input));
@@ -245,8 +247,9 @@ export default function DocumentForm({ owner, customers, products, onIssued }) {
       {!owner && (
         <p className="notice">Set up your business profile in Settings to issue a document.</p>
       )}
+      {!navigator.onLine && <p className="notice">Issuing needs a connection.</p>}
       {error && <p role="alert">{error}</p>}
-      <button type="button" onClick={issue} disabled={!owner}>
+      <button type="button" onClick={issue} disabled={!owner || !navigator.onLine}>
         Issue &amp; Download
       </button>
     </section>

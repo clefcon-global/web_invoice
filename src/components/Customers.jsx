@@ -1,30 +1,44 @@
 import { useState } from 'react';
 import { saveCustomers } from '../lib/storage.js';
 import { asLines } from '../lib/formHelpers.js';
+import { deleteCustomer, pushCustomer } from '../lib/sync.js';
 
 export default function Customers({ customers, refresh }) {
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState('');
   const [lines, setLines] = useState('');
+  const [error, setError] = useState('');
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
+    setError('');
     if (!name.trim()) return;
 
     const value = {
       id: editing?.id || crypto.randomUUID(),
       name: name.trim(),
       lines: asLines(lines),
+      updatedAt: Date.now(),
     };
-    saveCustomers(
-      editing
-        ? customers.map((entry) => (entry.id === editing.id ? value : entry))
-        : [...customers, value],
-    );
+    try {
+      const authoritative = await pushCustomer(value);
+      saveCustomers(editing ? customers.map((entry) => (entry.id === authoritative.id ? authoritative : entry)) : [...customers, authoritative]);
+    } catch (caught) {
+      setError(caught.message);
+      return;
+    }
     setEditing(null);
     setName('');
     setLines('');
     refresh();
+  }
+
+  async function remove(entry) {
+    try {
+      await deleteCustomer(entry.id, Date.now());
+      saveCustomers(customers.filter((candidate) => candidate.id !== entry.id));
+      refresh();
+    } catch (caught) { setError(caught.message); }
   }
 
   return (
@@ -41,6 +55,7 @@ export default function Customers({ customers, refresh }) {
         </label>
         <button>{editing ? 'Save customer' : 'Add customer'}</button>
       </form>
+      {error && <p role="alert">{error}</p>}
       <ul>
         {customers.map((entry) => (
           <li key={entry.id}>
@@ -55,12 +70,7 @@ export default function Customers({ customers, refresh }) {
             >
               Edit
             </button>
-            <button
-              onClick={() => {
-                saveCustomers(customers.filter((candidate) => candidate.id !== entry.id));
-                refresh();
-              }}
-            >
+            <button onClick={() => remove(entry)}>
               Delete
             </button>
           </li>

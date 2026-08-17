@@ -45,7 +45,7 @@ export function appendDocument(doc) {
 
 function saveDocuments(documents) { save(keys.documents, documents); }
 
-function loadCounters() {
+export function loadCounters() {
   const counters = load(keys.counters, { invoice: 1, receipt: 1 });
   return {
     invoice: Number.isInteger(counters.invoice) ? counters.invoice : 1,
@@ -53,13 +53,7 @@ function loadCounters() {
   };
 }
 
-export function nextDocumentNumber(kind) {
-  const counters = loadCounters();
-  const number = counters[kind];
-  counters[kind] += 1;
-  save(keys.counters, counters);
-  return number;
-}
+export function saveCounters(counters) { save(keys.counters, counters); }
 
 export function exportSnapshot() {
   return {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { formatPrice, parseCents } from '../lib/money.js';
 import { saveProducts } from '../lib/storage.js';
+import { deleteProduct, pushProduct } from '../lib/sync.js';
 
 export default function Products({ products, refresh }) {
   const [editing, setEditing] = useState(null);
@@ -8,7 +9,7 @@ export default function Products({ products, refresh }) {
   const [price, setPrice] = useState('');
   const [error, setError] = useState('');
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
     setError('');
 
@@ -19,12 +20,10 @@ export default function Products({ products, refresh }) {
         id: editing?.id || crypto.randomUUID(),
         description: description.trim(),
         unitPrice: parseCents(price),
+        updatedAt: Date.now(),
       };
-      saveProducts(
-        editing
-          ? products.map((entry) => (entry.id === editing.id ? value : entry))
-          : [...products, value],
-      );
+      const authoritative = await pushProduct(value);
+      saveProducts(editing ? products.map((entry) => (entry.id === authoritative.id ? authoritative : entry)) : [...products, authoritative]);
       setEditing(null);
       setDescription('');
       setPrice('');
@@ -32,6 +31,14 @@ export default function Products({ products, refresh }) {
     } catch (caught) {
       setError(caught.message);
     }
+  }
+
+  async function remove(entry) {
+    try {
+      await deleteProduct(entry.id, Date.now());
+      saveProducts(products.filter((candidate) => candidate.id !== entry.id));
+      refresh();
+    } catch (caught) { setError(caught.message); }
   }
 
   return (
@@ -63,12 +70,7 @@ export default function Products({ products, refresh }) {
             >
               Edit
             </button>
-            <button
-              onClick={() => {
-                saveProducts(products.filter((candidate) => candidate.id !== entry.id));
-                refresh();
-              }}
-            >
+            <button onClick={() => remove(entry)}>
               Delete
             </button>
           </li>

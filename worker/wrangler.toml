@@ -1,0 +1,9 @@
+name = "sheer-aura-invoicing-api"
+main = "src/index.js"
+compatibility_date = "2026-08-17"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sheer-aura-invoicing"
+# Fill in after running: wrangler d1 create sheer-aura-invoicing
+database_id = "REPLACE_WITH_REAL_DATABASE_ID"

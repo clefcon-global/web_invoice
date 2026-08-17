@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { downloadBlob } from '../lib/download.js';
 import { exportSnapshot, importSnapshot, saveOwner } from '../lib/storage.js';
 import { asLines, today } from '../lib/formHelpers.js';
+import { pushCustomer, pushOwner, pushProduct } from '../lib/sync.js';
 
 export default function Settings({ owner, refresh }) {
   const [value, setValue] = useState(
@@ -17,17 +18,22 @@ export default function Settings({ owner, refresh }) {
 
   const update = (key, next) => setValue({ ...value, [key]: next });
 
-  function save(event) {
+  async function save(event) {
     event.preventDefault();
 
     const { addressLinesText, paymentLinesText, ...ownerValue } = value;
-    saveOwner({
+    const ownerToSave = {
       ...ownerValue,
       addressLines: asLines(addressLinesText ?? value.addressLines.join('\n')),
       paymentLines: asLines(paymentLinesText ?? value.paymentLines.join('\n')),
-    });
-    setMessage('Profile saved.');
-    refresh();
+      updatedAt: Date.now(),
+    };
+    try {
+      const authoritative = await pushOwner(ownerToSave);
+      saveOwner(authoritative);
+      setMessage('Profile saved.');
+      refresh();
+    } catch (caught) { setMessage(caught.message); }
   }
 
   function exportData() {
@@ -44,6 +50,14 @@ export default function Settings({ owner, refresh }) {
     try {
       const parsed = JSON.parse(await file.text());
       if (window.confirm('Importing will replace all current data. Continue?')) {
+        const now = Date.now();
+        if (parsed.owner) await pushOwner({ ...parsed.owner, updatedAt: now });
+        for (const customer of parsed.customers || []) {
+          await pushCustomer({ ...customer, updatedAt: now });
+        }
+        for (const product of parsed.products || []) {
+          await pushProduct({ ...product, updatedAt: now });
+        }
         importSnapshot(parsed);
         window.location.reload();
       }
