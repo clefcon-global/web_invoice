@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────
+# THIS REPOSITORY IS PUBLIC. Anything committed here is visible
+# to the entire internet, forever, even if deleted in a later
+# commit. Never commit secrets or real customer data.
+# ─────────────────────────────────────────────────────────────
+
+# Secrets — passphrase hashes, API tokens, Cloudflare credentials
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+*.pem
+*.key
+.wrangler/
+
+# Real business data — customer lists, product lists, exported backups
+/data/
+*.backup.json
+workspace-export*.json
+
+# Reference invoice — contains a REAL customer name and a REAL bank account
+# number. Must never reach a public repo. The logo is branding and is safe,
+# so it is re-included below.
+/docs/sheer_aura/*
+!/docs/sheer_aura/sheer aura logo.png
+
+# Commercial fonts (licensed, must not be redistributed)
+/assets/fonts/commercial/
+
+# Dependencies & build output
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Local dev
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Scratch
+/tmp/
+/scratch/
