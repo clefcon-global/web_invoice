@@ -1,0 +1,28 @@
+{
+  "name": "sheer-aura-invoicing",
+  "version": "1.0.0",
+  "description": "Invoice and receipt generator for Sheer Aura",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "render:samples": "node scripts/render-samples.mjs",
+    "generate:goldens": "node scripts/generate-goldens.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "pdf-lib": "^1.17.1"
+  },
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}

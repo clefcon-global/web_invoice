@@ -1,0 +1,8 @@
+{
+  "_comment": "Copy to owner.local.json (git-ignored) and fill in real details to render samples with your actual business info. THIS .example file is committed, so it must stay fictional. scripts/check-secrets.mjs derives its scan patterns from owner.local.json, so keeping real values there means the pre-commit check protects them automatically.",
+  "businessName": "Example Business",
+  "addressLines": ["1 Example Street,", "Example Town."],
+  "phone": "0000000000",
+  "paymentLines": ["Example Bank, Example Branch.", "Example Account Holder", "A/C 0000000000"],
+  "sampleCustomer": "Mx. Example Customer"
+}

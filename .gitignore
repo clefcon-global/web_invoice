@@ -26,6 +26,10 @@ workspace-export*.json
 /docs/sheer_aura/*
 !/docs/sheer_aura/sheer aura logo.png
 
+# Real owner details for scripts/render-samples.mjs. The .example variant
+# (fictional, committed) shows the shape; this real one must never be tracked.
+/scripts/owner.local.json
+
 # Commercial fonts (licensed, must not be redistributed)
 /assets/fonts/commercial/
 
