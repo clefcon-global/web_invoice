@@ -5,5 +5,4 @@ compatibility_date = "2026-08-17"
 [[d1_databases]]
 binding = "DB"
 database_name = "sheer-aura-invoicing"
-# Fill in after running: wrangler d1 create sheer-aura-invoicing
-database_id = "REPLACE_WITH_REAL_DATABASE_ID"
+database_id = "0f4a654b-704a-4983-8444-72de03e55549"
