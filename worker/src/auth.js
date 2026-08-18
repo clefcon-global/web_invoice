@@ -50,8 +50,15 @@ async function pbkdf2(passphrase, salt, iterations, lengthBytes) {
   return new Uint8Array(bits);
 }
 
-/** Derive a `pbkdf2$...` hash string for a fresh passphrase. Used by scripts/hash-passphrase.mjs. */
-export async function hashPassphrase(passphrase, iterations = 210000, saltBytes = 16, hashBytes = 32) {
+/**
+ * Derive a `pbkdf2$...` hash string for a fresh passphrase. Used by scripts/hash-passphrase.mjs.
+ * Iteration count is capped at 100000 -- Cloudflare Workers' Web Crypto implementation rejects
+ * PBKDF2 above that (`NotSupportedError: iteration counts above 100000 are not supported`),
+ * even though Node's crypto.subtle (used when this runs locally) has no such limit. The cap has
+ * to be respected here, not just at verify time, since the iteration count is baked into the
+ * hash string and read back by verifyPassphrase.
+ */
+export async function hashPassphrase(passphrase, iterations = 100000, saltBytes = 16, hashBytes = 32) {
   const salt = crypto.getRandomValues(new Uint8Array(saltBytes));
   const derived = await pbkdf2(passphrase, salt, iterations, hashBytes);
   return `pbkdf2$${iterations}$${bytesToBase64(salt)}$${bytesToBase64(derived)}`;

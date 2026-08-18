@@ -70,7 +70,8 @@ export default {
         return response({ number: await issueNumber(env.DB, fields.kind) });
       }
       return response({ error: 'not_found' }, 404);
-    } catch {
+    } catch (err) {
+      console.error(err);
       return response({ error: 'internal' }, 500);
     }
   },
